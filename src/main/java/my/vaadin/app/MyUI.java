@@ -58,7 +58,7 @@ public class MyUI extends UI {
 
         HorizontalLayout toolbar = new HorizontalLayout(filtering, addCustomerBtn);
 
-        grid.setColumns("firstName", "lastName", "email");
+        grid.setColumns("firstName", "lastName", "email", "birthDate", "status");
 
         HorizontalLayout main = new HorizontalLayout(grid, form);
         main.setSizeFull();
