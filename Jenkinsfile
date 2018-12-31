@@ -1,9 +1,14 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'localMaven'
-    }
+	parameterd {
+		string(name:'tomcat_dev' defaultValue='3.16.129.203' description='Staging Server')
+		string(name:'tomcat_pro' defaultValue='18.221.142.253' description='Productio Server')	
+	}
+	
+	triggers {
+		pollSCM('* * * * *')
+	}
 
     stages {
         stage('Build') {
@@ -18,28 +23,18 @@ pipeline {
 			}
         }
 
-		stage('Deploy to Stagging') {
-			steps {
-				build job: 'Lesson5-Deploy-to-Stagging'
-			}
-		}
+		stage ('Deployments'){
+			parallel{
+		    	stage ('Deploy to Staging'){
+					steps {
+						sh "scp -i /Users/joselobm/Documents/CursoJenkins/AWS/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_dev}:/var/lib/tomcat7/webapps"
+					}
+				}
 
-		stage('Deploy to Production') {
-			steps {
-				timeout(time:5, unit:'DAYS') {
-					input message: 'Aprove PRODUCTION deployment?'
-				}
-				
-				build job: 'Lesson5-Deploy-to-Production'
-			}
-			
-			post {
-				success {
-					echo 'Despliegue en PRO correcto.'
-				}
-				
-				failure {
-					echo 'ERROR en Despliegue en PRO.'
+				stage ("Deploy to Production"){
+					steps {
+						sh "scp -i /Users/joselobm/Documents/CursoJenkins/AWS/tomcat-demo.pem **/target/*.war ec2-user@${params.tomcat_prod}:/var/lib/tomcat7/webapps"
+					}
 				}
 			}
 		}
